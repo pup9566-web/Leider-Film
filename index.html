@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Leider-Film">
+<meta name="theme-color" content="#000000">
+<title>Leider-Film</title>
+<style>
+:root{color-scheme:dark;--fg:#efece4;--mu:#85837d;--red:#e2231a;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+html,body{height:100%;margin:0;background:#000;color:var(--fg);font:14px/1.2 -apple-system,"SF Pro Text",system-ui,sans-serif;overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;overflow:hidden}
+[hidden]{display:none!important}
+#app{height:100%;display:flex;flex-direction:column}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+header{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:6px 12px;min-height:40px}
+header button{padding:8px 11px;border:1px solid #333;border-radius:999px;font-size:13px;white-space:nowrap}
+#hint{color:var(--mu);font-size:12px;text-align:center;flex:1;padding:0 2px}
+#vf{flex:1;min-height:0;position:relative;transition:opacity .15s}
+#cv{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;touch-action:none}
+#ring{position:absolute;width:64px;height:64px;margin:-32px 0 0 -32px;border:1.5px solid #fff;border-radius:50%;opacity:0;transition:opacity .8s;pointer-events:none}
+#ring.on{opacity:.9;transition:none}
+#msg{position:absolute;left:24px;right:24px;top:34%;margin:0;text-align:center;color:var(--mu);line-height:1.5;pointer-events:none}
+#msg button{pointer-events:auto;margin:12px 5px 0;padding:11px 18px;border:1px solid #555;border-radius:999px;color:var(--fg)}
+#sl{display:flex;padding:8px 18px 0}
+#rg{width:100%;accent-color:var(--red)}
+#chips{display:flex;gap:2px;padding:4px 8px 0}
+#chips button{flex:1;padding:8px 0;border-radius:10px;text-align:center}
+#chips b{display:block;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
+#chips small{display:block;color:var(--mu);font-size:11px;margin-bottom:3px}
+#chips .sel{background:#1b1b1b;box-shadow:inset 0 -2px var(--red)}
+#looks{display:flex;gap:8px;overflow-x:auto;padding:10px 14px;scrollbar-width:none}
+#looks::-webkit-scrollbar{display:none}
+#looks button{flex:none;padding:9px 14px;border-radius:999px;border:1px solid #2c2c2c;color:var(--mu);white-space:nowrap}
+#looks .sel{color:var(--fg);border-color:var(--fg)}
+#bar{display:flex;align-items:center;justify-content:space-around;padding:2px 0 10px}
+#bar>button{width:84px;padding:14px 0;color:var(--mu)}
+#bar>button.sel{color:var(--red)}
+#bar #sht{width:74px;height:74px;padding:0;border-radius:50%;border:3px solid var(--fg);background:var(--fg);box-shadow:inset 0 0 0 4px #000;transition:transform .08s}
+#bar #sht:active{transform:scale(.92)}
+#sheet{position:fixed;left:0;right:0;bottom:0;max-height:52%;overflow-y:auto;overscroll-behavior:contain;background:#101010;border-top:1px solid #2a2a2a;border-radius:18px 18px 0 0;z-index:5;padding:12px 16px calc(14px + env(safe-area-inset-bottom,0px))}
+#sheet .hd{display:flex;justify-content:space-between;align-items:center;padding-bottom:6px}
+#sheet .hd button{padding:6px 4px;color:var(--red)}
+.r{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid #1d1d1d}
+.r>span{flex:none;width:112px}
+.r i{font-style:normal;color:var(--mu);margin-left:6px;font-variant-numeric:tabular-nums}
+.r input{flex:1;min-width:0;accent-color:var(--red)}
+.sg{display:flex;gap:4px;flex:1;justify-content:flex-end}
+.sg button{flex:1;padding:7px 4px;border:1px solid #2c2c2c;border-radius:8px;color:var(--mu);font-size:12px}
+.sg .has{color:var(--fg)}
+.sg .sel{color:var(--fg);border-color:var(--fg)}
+#pv{position:fixed;inset:0;background:#000;display:flex;flex-direction:column;z-index:9;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
+#pv img{flex:1;min-height:0;width:100%;object-fit:contain;-webkit-touch-callout:default;-webkit-user-select:auto;user-select:auto}
+#pv p{margin:0;text-align:center;color:var(--mu);padding:10px 24px 0;font-size:12px;line-height:1.4}
+#pv div{display:flex;gap:12px;justify-content:center;padding:12px}
+#pv button{padding:12px 24px;border-radius:999px;border:1px solid #444}
+</style></head><body>
+<div id="app">
+<header><button id="ra">3:4</button><span id="hint"></span><button id="live" hidden>Live</button><button id="bd">Bild</button><button id="fl">Wenden</button></header>
+<div id="vf"><canvas id="cv"></canvas><i id="ring"></i><p id="msg"></p></div>
+<div id="sl"><input id="rg" type="range"></div>
+<div id="chips"></div>
+<div id="looks"></div>
+<div id="bar"><button id="imp">Galerie</button><button id="sht" aria-label="Auslöser"></button><button id="de">Doppelt</button></div>
+</div>
+<div id="sheet" hidden><div class="hd"><b>Bildeinstellungen</b><button id="sx">Fertig</button></div><div id="rows"></div><div class="r"><span>Rezept</span><div class="sg" id="rc"></div></div></div>
+<input id="fi" type="file" accept="image/*" hidden><input id="fc" type="file" accept="image/*" capture="environment" hidden>
+<video id="vid" playsinline muted autoplay style="position:fixed;left:0;bottom:0;width:64px;height:64px;opacity:.02;pointer-events:none"></video>
+<div id="pv" hidden><img alt="Aufnahme"><p></p><div><button id="sh">Teilen</button><button id="cl">Weiter</button></div></div>
+<script>
+const $=s=>document.querySelector(s),cv=$('#cv'),vid=$('#vid');
+window.onerror=(m,s,l)=>{$('#msg').textContent='Fehler: '+m+' (Zeile '+l+')'};
+const gl=cv.getContext('webgl',{preserveDrawingBuffer:true,antialias:false,alpha:false});
+const VS='attribute vec2 p;varying vec2 v;void main(){v=p*.5+.5;gl_Position=vec4(p,0,1);}';
+const FS=`precision highp float;varying vec2 v;
+uniform sampler2D A,B;uniform vec4 cA,cB;uniform vec2 foc,asp,res,ws;
+uniform vec3 sh,hi,lw;
+uniform float ev,k,blur,vig,con,sat,fade,grain,gsz,mx,hasB,tm,dr,ht,sd,cl,sp,cc,cb;
+float h(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}
+vec3 smp(vec2 u){return texture2D(A,vec2(u.x,1.-u.y)*cA.xy+cA.zw).rgb;}
+vec3 ring(vec2 u,float d){vec2 px=1./res*d;return (smp(u+vec2(px.x,0.))+smp(u-vec2(px.x,0.))+smp(u+vec2(0.,px.y))+smp(u-vec2(0.,px.y)))*.25;}
+void main(){
+ vec2 u=v;
+ vec3 c=smp(u);
+ if(blur>.0001){float r=blur*smoothstep(.05,.6,length((u-foc)*asp));vec3 s=vec3(0.);
+  for(int i=0;i<16;i++){float a=float(i)*2.4;float q=sqrt((float(i)+.5)/16.);s+=smp(u+vec2(cos(a),sin(a))*q*r/asp);}
+  c=s/16.;}
+ c+=(c-ring(u,1.5))*sp+(c-ring(u,9.))*cl;
+ float t=(k-5500.)/3500.;
+ c*=vec3(1.+.22*t+ws.x,1.,1.-.22*t+ws.y)*exp2(ev);
+ if(hasB>.5){vec3 b=texture2D(B,vec2(u.x,1.-u.y)*cB.xy+cB.zw).rgb*exp2(ev);
+  c=1.-(1.-c*(1.-.6*mx))*(1.-b*(.4+.6*mx));}
+ vec3 o=max(c-.65,0.);c=c-o+o/(1.+o*3.*dr);c*=1.+dr*.12;
+ float l=dot(c,vec3(.299,.587,.114));
+ float lb=dot(c,lw);
+ c=mix(vec3(sat<.01?lb:l),c,sat);
+ c=(c-.5)*con+.5;
+ c=c*(1.-fade)+fade;
+ l=dot(c,vec3(.299,.587,.114));
+ c*=1.+ht*smoothstep(.45,1.,l)-sd*(1.-smoothstep(0.,.55,l));
+ c+=sh*(1.-l)+hi*l;
+ float sm=max(c.r,max(c.g,c.b))-min(c.r,min(c.g,c.b));
+ c*=1.-.3*cc*sm;
+ c*=1.-.3*cb*sm*smoothstep(0.,.25,c.b-max(c.r,c.g));
+ c*=1.-vig*smoothstep(.3,.95,length((u-.5)*asp)*1.15);
+ c+=(h(floor(u*res/gsz)+tm)-.5)*grain*(1.-abs(l-.5));
+ gl_FragColor=vec4(clamp(c,0.,1.),1.);
+}`;
+const cs=(t,s)=>{const o=gl.createShader(t);gl.shaderSource(o,s);gl.compileShader(o);return o};
+const pr=gl.createProgram(),fso=cs(gl.FRAGMENT_SHADER,FS);gl.attachShader(pr,cs(gl.VERTEX_SHADER,VS));gl.attachShader(pr,fso);gl.linkProgram(pr);gl.useProgram(pr);
+if(!gl.getShaderParameter(fso,gl.COMPILE_STATUS))$('#msg').textContent='Shader-Fehler: '+gl.getShaderInfoLog(fso);
+gl.bindBuffer(gl.ARRAY_BUFFER,gl.createBuffer());gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+const pl=gl.getAttribLocation(pr,'p');gl.enableVertexAttribArray(pl);gl.vertexAttribPointer(pl,2,gl.FLOAT,false,0,0);
+const tex=[0,1].map(i=>{const t=gl.createTexture();gl.activeTexture(gl.TEXTURE0+i);gl.bindTexture(gl.TEXTURE_2D,t);
+ [gl.TEXTURE_WRAP_S,gl.TEXTURE_WRAP_T].forEach(w=>gl.texParameteri(gl.TEXTURE_2D,w,gl.CLAMP_TO_EDGE));
+ gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+ gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([0,0,0,255]));return t});
+gl.uniform1i(gl.getUniformLocation(pr,'A'),0);gl.uniform1i(gl.getUniformLocation(pr,'B'),1);
+const loc={};const U=(n,...a)=>{loc[n]??=gl.getUniformLocation(pr,n);gl['uniform'+a.length+'f'](loc[n],...a)};
+const up=(i,src)=>{gl.activeTexture(gl.TEXTURE0+i);gl.bindTexture(gl.TEXTURE_2D,tex[i]);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,src)};
+
+/* Zustand */
+const S={f:[1.4,1.7,2,2.8,4,5.6,8,11,16],iso:[100,200,400,800,1600,3200,6400],t:[1000,500,250,125,60,30,15],mm:[28,35,50,75,90]};
+const Q={f:3,iso:2,t:3,ev:0,mm:0,k:5500,mx:.5};
+const Z={dr:0,ht:0,sd:0,col:0,cl:0,sp:1,gr:1,gs:0,cc:0,cb:0,fl:0,wr:0,wb:0,bk:0};
+const FL=[[.299,.587,.114],[.45,.45,.1],[.7,.25,.05],[.2,.7,.1]];
+const FM={f:v=>'f/'+S.f[v],iso:v=>S.iso[v],t:v=>'1/'+S.t[v],ev:v=>(v>0?'+':v<0?'−':'±')+Math.abs(v).toFixed(1),mm:v=>S.mm[v]+' mm',k:v=>v+' K',mx:v=>Math.round(v*100)+' %'};
+const NM={f:'Blende',iso:'ISO',t:'Zeit',ev:'EV',mm:'Objektiv',k:'WB',mx:'Mix'};
+const RG={f:[0,8,1],iso:[0,6,1],t:[0,6,1],ev:[-2,2,.1],mm:[0,4,1],k:[3000,9000,100],mx:[0,1,.01]};
+const ADJ=[['dr','Dynamik',['Normal','Mittel','Hoch']],['ht','Lichter',-2,2,1],['sd','Schatten',-2,2,1],['col','Farbe',-4,4,1],['cl','Klarheit',-4,4,1],['sp','Schärfe',-4,4,1],['gr','Korn',['Aus','Schwach','Stark']],['gs','Korngröße',['Klein','Groß']],['cc','Farbtiefe',['Aus','Schwach','Stark']],['cb','Blautiefe',['Aus','Schwach','Stark']],['fl','S/W-Filter',['Aus','Gelb','Rot','Grün']],['wr','WB Rot',-9,9,1],['wb','WB Blau',-9,9,1],['bk','Bokeh (Blende)',0,10,1]];
+let cur='f',lk=3,ra=0,still=null,front=false,stream=null,de=0,hasB=false,bDim=[1,1],bMir=false,bz=1,foc=[.5,.5],dirty=false,blob=null,svm=false;
+/* Simulationen: Name, Kontrast, Sättigung, Fade, Schatten-Tint, Licht-Tint, Korn, Vignette */
+const LK=[
+['Natur',1.05,1.05,0,[0,0,0],[0,0,0],.02,.04],
+['Satt',1.22,1.5,0,[0,.005,.03],[.01,.02,0],.03,.08],
+['Weich',.97,1,.02,[0,.01,.01],[.03,.015,.01],.03,.04],
+['Gedämpft',1.2,.68,.03,[-.01,.015,.045],[.045,.025,0],.05,.14],
+['Porträt+',1.12,.9,.02,[0,.01,.02],[.03,.02,.005],.04,.08],
+['Porträt',.95,.88,.04,[0,.01,.015],[.025,.02,.01],.03,.05],
+['Teal-Gold',1.28,.92,.04,[-.02,.03,.055],[.065,.03,-.03],.08,.18],
+['Bernstein',1.05,.95,.06,[.025,.01,0],[.075,.045,0],.06,.15],
+['Kino',.9,.8,.08,[0,.015,.03],[.015,.01,0],.03,.06],
+['Bleach Bypass',1.38,.42,.02,[0,.005,.02],[.01,.01,0],.07,.16],
+['S/W Kontrast',1.28,0,.02,[0,0,0],[0,0,0],.09,.18],
+['S/W Weich',1.1,0,.04,[0,0,0],[0,0,0],.06,.1],
+['Sepia',1.05,0,.06,[.03,.015,0],[.1,.06,0],.06,.2]];
+const RA=[[3,4],[1,1],[2,3],[9,16],[4,3]];
+
+/* Regler unten */
+const rg=$('#rg');
+function chips(){$('#chips').innerHTML=Object.keys(NM).filter(n=>n!=='mx'||de==2).map(n=>`<button data-k="${n}" class="${n==cur?'sel':''}"><small>${NM[n]}</small><b>${FM[n](Q[n])}</b></button>`).join('')}
+function sel(n){cur=n;const[a,b,s]=RG[n];rg.min=a;rg.max=b;rg.step=s;rg.value=Q[n];chips()}
+rg.oninput=()=>{Q[cur]=+rg.value;chips()};
+$('#chips').onclick=e=>{const b=e.target.closest('button');if(b)sel(b.dataset.k)};
+const lks=()=>document.querySelectorAll('#looks button').forEach((b,i)=>b.classList.toggle('sel',i==lk));
+$('#looks').innerHTML=LK.map((l,i)=>`<button data-i="${i}">${l[0]}</button>`).join('');
+$('#looks').onclick=e=>{const b=e.target.closest('button');if(b){lk=+b.dataset.i;lks()}};
+
+/* Bildeinstellungen und Rezepte */
+function rows(){$('#rows').innerHTML=ADJ.map(a=>a.length==3?`<div class="r"><span>${a[1]}</span><div class="sg">${a[2].map((o,i)=>`<button data-a="${a[0]}" data-v="${i}" class="${Z[a[0]]==i?'sel':''}">${o}</button>`).join('')}</div></div>`:`<div class="r"><span>${a[1]}<i id="v_${a[0]}">${a[2]<0&&Z[a[0]]>0?'+':''}${Z[a[0]]}</i></span><input type="range" data-a="${a[0]}" min="${a[2]}" max="${a[3]}" step="${a[4]}" value="${Z[a[0]]}"></div>`).join('')}
+$('#rows').onclick=e=>{const b=e.target.closest('button');if(b){Z[b.dataset.a]=+b.dataset.v;rows()}};
+$('#rows').oninput=e=>{const t=e.target;Z[t.dataset.a]=+t.value;$('#v_'+t.dataset.a).textContent=(+t.min<0&&t.value>0?'+':'')+t.value};
+$('#bd').onclick=()=>{$('#sheet').hidden=false};$('#sx').onclick=()=>{$('#sheet').hidden=true};
+const rd=()=>{try{return JSON.parse(localStorage.getItem('ldlrec')||'{}')}catch(e){return{}}};
+function rcs(){const d=rd();$('#rc').innerHTML=[0,1,2,3].map(i=>`<button data-c="${i}" class="${d[i]?'has':''}">C${i+1}</button>`).join('')+`<button id="sv" class="${svm?'sel':''}">Sichern</button>`}
+$('#rc').onclick=e=>{const b=e.target.closest('button');if(!b)return;
+ if(b.id=='sv'){svm=!svm;rcs();return}
+ const d=rd(),i=b.dataset.c;
+ if(svm){d[i]={lk,Z:{...Z}};try{localStorage.setItem('ldlrec',JSON.stringify(d))}catch(x){}svm=false}
+ else if(d[i]){lk=d[i].lk;Object.assign(Z,d[i].Z);lks();rows()}
+ rcs()};
+
+function size(){const[w,h]=RA[ra],m=1800;cv.width=w>=h?m:Math.round(m*w/h);cv.height=w>=h?Math.round(m*h/w):m;gl.viewport(0,0,cv.width,cv.height);$('#ra').textContent=w+':'+h}
+$('#ra').onclick=()=>{ra=(ra+1)%RA.length;size()};
+
+/* Doppelbelichtung */
+function setDE(n){de=n;if(!n)hasB=false;$('#de').classList.toggle('sel',!!n);
+ $('#hint').textContent=['Tippe aufs Bild, um den Fokus zu setzen','Doppelbelichtung: Mache das erste Bild','Zweites Bild einrichten, Mix einstellen'][n];
+ if(n==2)sel('mx');else if(cur=='mx')sel('f');else chips()}
+$('#de').onclick=()=>setDE(de?0:1);
+
+/* Kamera */
+const fail=n=>{$('#msg').innerHTML='Kein Live-Bild ('+n+'). Die Kamera ist hier eventuell gesperrt. Mit dem Auslöser nimmst du stattdessen ein Foto mit der iPhone-Kamera auf und bearbeitest es hier.<br><button id="go">Kamera starten</button><button id="ph">Foto aufnehmen</button>'};
+async function cam(){
+ $('#msg').textContent='Kamera wird gestartet …';
+ setTimeout(()=>{if(!still&&!isLive())fail('keine Antwort')},5000);
+ try{stream&&stream.getTracks().forEach(t=>t.stop());
+  stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:front?'user':{ideal:'environment'},width:{ideal:1920},height:{ideal:1440}},audio:false});
+  vid.srcObject=stream;await vid.play()}
+ catch(e){fail(e&&e.name||'Fehler')}
+}
+vid.onplaying=()=>{$('#msg').textContent=''};
+$('#fl').onclick=()=>{front=!front;cam()};
+$('#msg').onclick=e=>{if(e.target.id=='go')cam();if(e.target.id=='ph')$('#fc').click()};
+$('#live').onclick=()=>{still=null;$('#live').hidden=true};
+$('#imp').onclick=()=>$('#fi').click();
+const fit=im=>{const w=im.naturalWidth,h=im.naturalHeight,m=Math.max(w,h);if(m<=4096)return im;const s=4096/m,c=document.createElement('canvas');c.width=Math.round(w*s);c.height=Math.round(h*s);c.getContext('2d').drawImage(im,0,0,c.width,c.height);return c};
+$('#fi').onchange=$('#fc').onchange=e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
+ const im=new Image();im.onload=()=>{const g=fit(im);
+  if(de==1){bDim=[g.naturalWidth||g.width,g.naturalHeight||g.height];bMir=false;bz=1;up(1,g);hasB=true;setDE(2)}
+  else{still=g;dirty=true;$('#live').hidden=false;$('#msg').textContent=''}
+ };const fr=new FileReader();fr.onload=()=>{im.src=fr.result};fr.readAsDataURL(f)};
+
+/* Rendering */
+const isLive=()=>!still&&vid.readyState>=2&&vid.videoWidth>0;
+const dim=s=>s===vid?[vid.videoWidth,vid.videoHeight]:[s.naturalWidth||s.width,s.naturalHeight||s.height];
+function crop(sw,sh,z,mir){const ta=cv.width/cv.height,sa=sw/sh;let fx=1,fy=1;sa>ta?fx=ta/sa:fy=sa/ta;fx/=z;fy/=z;const ox=(1-fx)/2,oy=(1-fy)/2;return mir?[-fx,fy,ox+fx,oy]:[fx,fy,ox,oy]}
+function draw(){
+ const live=isLive();
+ if(!still&&!live){gl.clearColor(0,0,0,1);gl.clear(gl.COLOR_BUFFER_BIT);return}
+ const src=still||vid,[sw,sh]=dim(src);
+ if(live||dirty){up(0,src);dirty=false}
+ const z=S.mm[Q.mm]/28,f=S.f[Q.f],iso=S.iso[Q.iso],T=S.t[Q.t],L=LK[lk];
+ const E=Math.max(-2.5,Math.min(2.5,.6*(Math.log2(iso/400)+Math.log2(125/T)+2*Math.log2(4/f))))+Q.ev;
+ U('cA',...crop(sw,sh,z,front&&!still));U('cB',...crop(bDim[0],bDim[1],bz,bMir));
+ U('foc',...foc);U('asp',cv.width/cv.height,1);U('res',cv.width,cv.height);
+ U('ev',E);U('k',Q.k);U('ws',Z.wr*.02,Z.wb*.02);
+ U('blur',Z.bk/10*Math.max(0,Math.min(2,2.8/f-.15))*.02);
+ U('vig',L[7]+Math.max(0,Math.min(1,2.8/f-.4))*.2);
+ U('con',L[1]);U('sat',Math.max(0,L[2]*(1+Z.col*.12)));U('fade',L[3]);U('sh',...L[4]);U('hi',...L[5]);U('lw',...FL[Z.fl]);
+ U('dr',[0,.5,1][Z.dr]);U('ht',Z.ht*.1);U('sd',Z.sd*.1);U('cl',Z.cl*.25);U('sp',Z.sp*.3);U('cc',Z.cc/2);U('cb',Z.cb/2);
+ U('grain',[0,1,2.2][Z.gr]*L[6]+(Z.gr?Math.log2(iso/100)*.01:0));U('gsz',Z.gs?2.6:1.2);
+ U('mx',Q.mx);U('hasB',hasB?1:0);U('tm',(performance.now()%1000)/7);
+ gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+}
+const flash=()=>{const v=$('#vf');v.style.opacity=.3;setTimeout(()=>v.style.opacity=1,90)};
+
+/* Auslöser */
+function snap(){
+ if(de==1){
+  if(still){up(1,still);bDim=dim(still);bMir=false;still=null;$('#live').hidden=true}
+  else if(isLive()){up(1,vid);bDim=dim(vid);bMir=front}
+  else{$('#fc').click();return}
+  bz=S.mm[Q.mm]/28;hasB=true;setDE(2);flash();return}
+ if(!still&&!isLive()){$('#fc').click();return}
+ draw();
+ cv.toBlob(b=>{blob=b},'image/jpeg',.93);
+ $('#pv img').src=cv.toDataURL('image/jpeg',.93);
+ $('#pv p').textContent='Bild gedrückt halten und „Zu Fotos hinzufügen“ wählen, oder teilen.';
+ $('#pv').hidden=false;
+ if(de==2)setDE(0);
+ if(still){still=null;$('#live').hidden=true}
+ flash();
+}
+$('#sht').onclick=snap;
+$('#cl').onclick=()=>$('#pv').hidden=true;
+$('#sh').onclick=async()=>{if(!blob)return;const f=new File([blob],'leider-film.jpg',{type:'image/jpeg'});
+ try{if(navigator.canShare?.({files:[f]}))await navigator.share({files:[f]});else throw 0}
+ catch(e){if(e&&e.name==='AbortError')return;$('#pv p').textContent='Teilen geht hier nicht. Halte das Bild gedrückt und wähle „Zu Fotos hinzufügen“.'}};
+
+/* Fokuspunkt für das optionale Bokeh */
+$('#vf').onpointerdown=e=>{
+ const r=cv.getBoundingClientRect(),a=cv.width/cv.height;let w=r.width,h=r.height,ox=0,oy=0;
+ if(w/h>a){w=h*a;ox=(r.width-w)/2}else{h=w/a;oy=(r.height-h)/2}
+ const x=(e.clientX-r.left-ox)/w,y=(e.clientY-r.top-oy)/h;if(x<0||x>1||y<0||y>1)return;
+ foc=[x,1-y];const g=$('#ring'),vr=$('#vf').getBoundingClientRect();
+ g.style.left=e.clientX-vr.left+'px';g.style.top=e.clientY-vr.top+'px';g.classList.add('on');setTimeout(()=>g.classList.remove('on'),60)};
+
+size();lks();sel('f');setDE(0);rows();rcs();cam();
+(function loop(){draw();requestAnimationFrame(loop)})();
+</script></body></html>
